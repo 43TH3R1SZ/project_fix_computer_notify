@@ -47,6 +47,5 @@ When the repair process is finished, the status will be updated to "Completed." 
    `npm start`
 
 ## Developer
-* **Name:** [Your Name]
-* **Student ID:** [Your ID]
-* **Faculty/Department:** [Your Faculty/Department]
+* **Name:** [Suvijak Purdjiradtikan]
+* **Department:** [Information Technology]
