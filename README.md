@@ -28,7 +28,7 @@ When the repair process is finished, the status will be updated to "Completed." 
 
 ## Technologies Used
 * **Frontend:** [HTML/CSS]
-* **Backend:** [Node.ks]
+* **Backend:** [Node.js]
 * **Database:** [MongoDB]
 
 ## Installation and Setup
