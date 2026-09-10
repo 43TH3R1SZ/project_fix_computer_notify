@@ -27,9 +27,9 @@ The user can check the status of their computer at any time by simply entering t
 When the repair process is finished, the status will be updated to "Completed." The user can then select whether they want to pick up the device in person or have the staff deliver it to their location.
 
 ## Technologies Used
-* **Frontend:** [Insert Technology, e.g., React, Vue.js, HTML/CSS]
-* **Backend:** [Insert Technology, e.g., Node.js, Python, PHP]
-* **Database:** [Insert Technology, e.g., MySQL, MongoDB]
+* **Frontend:** [HTML/CSS]
+* **Backend:** [Node.ks]
+* **Database:** [MongoDB]
 
 ## Installation and Setup
 
