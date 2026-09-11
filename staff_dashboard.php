@@ -46,6 +46,17 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
         $result = $stmt->get_result();
     }
 }
+
+// ดึงรหัสนักศึกษาทั้งหมดเพื่อนำมาสร้างเป็นตัวเลือกใน Dropdown
+$all_students = [];
+$sql_students = "SELECT DISTINCT student_id FROM repair_tickets ORDER BY student_id ASC";
+$result_students = $conn->query($sql_students);
+if ($result_students && $result_students->num_rows > 0) {
+    while($row_student = $result_students->fetch_assoc()) {
+        $raw_id = str_replace('ticket_', '', $row_student['student_id']);
+        $all_students[] = $raw_id;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -57,19 +68,26 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Prompt', sans-serif; }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+        
+        /* ซ่อน Scrollbar เริ่มต้น แต่ยังเลื่อนได้ */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
         }
-        input[type="number"] {
-            appearance: textfield;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- เปลี่ยน Navbar ให้สว่างและใช้โทนสีเดียวกับหน้าผู้ใช้ -->
     <nav class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
             <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -84,17 +102,61 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
 
     <div class="max-w-7xl mx-auto px-4 pb-10">
         
+        <!-- กล่องค้นหาแบบ Custom Dropdown -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 max-w-xl mx-auto">
             <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">ค้นหารายการแจ้งซ่อมของนักศึกษา</h2>
-            <form method="GET" action="" class="flex gap-3">
-                <input type="number" name="search" value="<?php echo htmlspecialchars($search_student_id); ?>" placeholder="กรอกรหัสนักศึกษา (ตัวเลขเท่านั้น)" class="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:border-[#F0441C] focus:ring-1 focus:ring-[#F0441C] transition" required>
-                <!-- ปุ่มค้นหาโทนสีหลัก -->
-                <button type="submit" class="bg-[#F0441C] hover:bg-[#D93A16] text-white font-medium px-6 py-3 rounded-md transition whitespace-nowrap shadow-sm">
-                    ค้นหา
+            
+            <form method="GET" action="" id="search-form" class="flex flex-col sm:flex-row gap-3">
+                <div class="relative w-full" id="dropdown-container">
+                    
+                    <!-- ช่องพิมพ์ค้นหา (อัปเกรดหน้าตา) -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="search-input" name="search" value="<?php echo htmlspecialchars($search_student_id); ?>" 
+                               placeholder="ค้นหาหรือเลือกรหัสนักศึกษา..." 
+                               class="w-full pl-10 pr-10 py-3 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:border-[#F0441C] focus:ring-1 focus:ring-[#F0441C] transition bg-white" 
+                               autocomplete="off">
+                        <!-- ไอคอนลูกศรลง -->
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" id="dropdown-toggle">
+                            <svg class="h-5 w-5 text-gray-400 hover:text-gray-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- กล่อง Dropdown Options (ซ่อนไว้ก่อน) -->
+                    <div id="dropdown-menu" class="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 hidden">
+                        <ul class="max-h-60 overflow-y-auto custom-scrollbar py-1 text-sm text-gray-700" id="options-list">
+                            <?php if (empty($all_students)): ?>
+                                <li class="px-4 py-3 text-gray-500 text-center">ไม่มีข้อมูลรหัสนักศึกษาในระบบ</li>
+                            <?php else: ?>
+                                <?php foreach($all_students as $std_id): ?>
+                                    <li class="dropdown-option cursor-pointer select-none px-4 py-2.5 hover:bg-orange-50 hover:text-[#F0441C] transition flex items-center" data-value="<?php echo htmlspecialchars($std_id); ?>">
+                                        <svg class="h-4 w-4 mr-2 text-gray-400 option-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        <?php echo htmlspecialchars($std_id); ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </ul>
+                        <!-- กรณีค้นหาแล้วไม่เจอ -->
+                        <div id="no-results" class="hidden px-4 py-3 text-sm text-gray-500 text-center">
+                            ไม่พบรหัสที่ค้นหา
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <button type="submit" class="bg-[#F0441C] hover:bg-[#D93A16] text-white font-medium px-6 py-3 rounded-md transition whitespace-nowrap shadow-sm h-[50px]">
+                    ค้นหาข้อมูล
                 </button>
             </form>
         </div>
 
+        <!-- ส่วนของตารางแสดงผล (เหมือนเดิม) -->
         <?php if (isset($_GET['search'])): ?>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -103,7 +165,6 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
                         <p class="text-sm text-gray-500">รหัสนักศึกษา: <span class="font-semibold text-gray-700"><?php echo htmlspecialchars($search_student_id); ?></span></p>
                     </div>
                     <?php if ($result && $result->num_rows > 0): ?>
-                        <!-- เปลี่ยนป้ายแสดงจำนวนรายการเป็นโทนสีหลัก -->
                         <span class="bg-orange-50 text-[#F0441C] text-xs font-semibold px-3 py-1.5 rounded-full border border-orange-200">พบ <?php echo $result->num_rows; ?> รายการ</span>
                     <?php endif; ?>
                 </div>
@@ -186,7 +247,6 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
                                                     <option value="ยกเลิก" <?php echo ($status === 'ยกเลิก') ? 'selected' : ''; ?>>ยกเลิก</option>
                                                 </select>
                                                 
-                                                <!-- เปลี่ยนปุ่มอัปเดตสถานะเป็นโทนสีหลัก -->
                                                 <button type="submit" class="w-full bg-[#F0441C] hover:bg-[#D93A16] text-white text-xs py-2 rounded-md transition shadow-sm font-medium">
                                                     บันทึกสถานะ
                                                 </button>
@@ -214,10 +274,97 @@ if (isset($_GET['search']) && trim($_GET['search']) !== '') {
         <?php endif; ?>
 
     </div>
+
+    <!-- Script ควบคุม Custom Dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const dropdownToggle = document.getElementById('dropdown-toggle');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const optionsList = document.getElementById('options-list');
+            const options = document.querySelectorAll('.dropdown-option');
+            const noResults = document.getElementById('no-results');
+
+            // เปิด/ปิด Dropdown เมื่อคลิกที่ลูกศรหรือช่องพิมพ์
+            function toggleDropdown() {
+                dropdownMenu.classList.toggle('hidden');
+            }
+
+            searchInput.addEventListener('click', () => {
+                dropdownMenu.classList.remove('hidden');
+            });
+
+            dropdownToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDropdown();
+                searchInput.focus();
+            });
+
+            // ปิด Dropdown เมื่อคลิกที่อื่น
+            document.addEventListener('click', function(e) {
+                if (!document.getElementById('dropdown-container').contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+
+            // ค้นหาและกรองข้อมูลเมื่อพิมพ์
+            searchInput.addEventListener('input', function() {
+                const filter = this.value.toLowerCase();
+                let hasResults = false;
+
+                dropdownMenu.classList.remove('hidden');
+
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(filter)) {
+                        option.classList.remove('hidden');
+                        hasResults = true;
+                    } else {
+                        option.classList.add('hidden');
+                    }
+                });
+
+                if (hasResults) {
+                    noResults.classList.add('hidden');
+                    optionsList.classList.remove('hidden');
+                } else {
+                    noResults.classList.remove('hidden');
+                    optionsList.classList.add('hidden');
+                }
+            });
+
+            // เมื่อคลิกเลือกตัวเลือกใน Dropdown
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const val = this.getAttribute('data-value');
+                    searchInput.value = val;
+                    dropdownMenu.classList.add('hidden');
+                    
+                    // อัปเดต UI ให้รู้ว่าเลือกตัวนี้อยู่ (โชว์ไอคอนติ๊กถูก)
+                    options.forEach(opt => {
+                        opt.classList.remove('bg-orange-50', 'text-[#F0441C]');
+                        opt.querySelector('.option-icon').classList.add('hidden');
+                        opt.querySelector('.option-icon').classList.remove('text-[#F0441C]');
+                    });
+                    
+                    this.classList.add('bg-orange-50', 'text-[#F0441C]');
+                    this.querySelector('.option-icon').classList.remove('hidden');
+                    this.querySelector('.option-icon').classList.add('text-[#F0441C]');
+                });
+            });
+
+            // ตรวจสอบค่าเริ่มต้นตอนโหลดหน้าเพื่อแสดงตัวเลือกที่ถูกเลือก
+            const currentVal = searchInput.value;
+            if (currentVal) {
+                options.forEach(option => {
+                    if (option.getAttribute('data-value') === currentVal) {
+                        option.classList.add('bg-orange-50', 'text-[#F0441C]');
+                        option.querySelector('.option-icon').classList.remove('hidden');
+                        option.querySelector('.option-icon').classList.add('text-[#F0441C]');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-<?php
-if (isset($conn)) {
-    $conn->close();
-}
-?>
