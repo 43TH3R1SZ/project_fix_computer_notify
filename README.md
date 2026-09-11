@@ -27,24 +27,14 @@ The user can check the status of their computer at any time by simply entering t
 When the repair process is finished, the status will be updated to "Completed." The user can then select whether they want to pick up the device in person or have the staff deliver it to their location.
 
 ## Technologies Used
-* **Frontend:** [HTML/CSS]
+* **Frontend:** [HTML/TailwindCSS]
 * **Backend:** [Node.js]
-* **Database:** [MongoDB]
+* **Database:** [MySql]
 
 ## Installation and Setup
 
 ### Prerequisites
-* [List required software, e.g., Node.js, XAMPP]
-
-### Steps to Run
-1. Clone the repository:
-   `git clone https://github.com/yourusername/your-repo-name.git`
-2. Navigate to the project directory:
-   `cd your-repo-name`
-3. Install the dependencies:
-   `npm install`
-4. Run the application:
-   `npm start`
+* [XAMPP]
 
 ## Developer
 * **Name:** [Suvijak Purdjiradtikan]
