@@ -1,41 +1,31 @@
-# Campus Computer Repair Notification System
+# RIETC Care · ระบบแจ้งซ่อมคอมพิวเตอร์
 
-## Project Overview
-This project is a senior graduation project aimed at developing a computer and laptop repair notification system for college students and staff. It streamlines the process of requesting IT support, managing device pickups within the campus, and tracking the repair status in real-time.
+เว็บ PHP สำหรับนักศึกษาและทีม IT อิงโครงสร้างจากโปรเจกต์ใน ZIP ที่แนบมา และใช้ MySQL/MariaDB นำเข้าฐานข้อมูลผ่าน phpMyAdmin ได้
 
-## Features
-* **On-Campus Pickup Service:** Users can specify their exact location or building within the college for the IT staff to pick up their devices.
-* **Student ID as Ticket:** The system uses the user's Student ID as the primary tracking ticket, eliminating the need to remember randomly generated tracking numbers.
-* **Real-time Status Tracking:** Users can monitor the progress of their repair (e.g., Pending, Picked Up, Repairing, Finished).
-* **Flexible Return Options:** Once the repair is complete, users can choose to pick up the device themselves or request the staff to deliver it to their specified location.
+## ติดตั้ง
 
-## How It Works
+1. ใช้ PHP 8.1+ และเปิดส่วนขยาย `mysqli` กับ `fileinfo` (ชุด XAMPP เปิดใช้ได้ตามปกติ)
+2. ใน phpMyAdmin เลือก **Import** แล้วเลือก `schema.sql` ไฟล์นี้สร้างฐานข้อมูล `database_fcn` และตาราง `users`, `repair_tickets`
+3. ตั้งค่า MySQL ผ่าน environment variables หากไม่ได้ใช้ค่า XAMPP เริ่มต้น: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS` ค่าเริ่มต้นคือ `localhost`, `3306`, `database_fcn`, `root`, รหัสผ่านว่าง
+4. วางโฟลเดอร์เว็บใน `htdocs` หรือ document root และให้ PHP เขียนไฟล์ใน `uploads/` ได้
+5. สร้างบัญชีผู้ดูแลผ่าน command line (รหัสผ่านอย่างน้อย 12 ตัวอักษร):
 
-### 1. Requesting a Repair
-The user logs into the system, describes the computer or laptop issue, and provides their current location within the college for device pickup.
+   ```sh
+   php setup-admin.php 66209010001 'Your-Long-Password' 'ชื่อ' 'นามสกุล' 'Information Technology'
+   ```
 
-### 2. Device Pickup
-The technical staff receives the notification and travels to the provided location to collect the device.
+6. เปิด `index.php` ผ่าน Apache แล้วสมัครบัญชีนักศึกษาหรือเข้าสู่ระบบด้วยบัญชี Admin ที่สร้างไว้
 
-### 3. Ticket Generation
-Upon collecting the device, the system registers the repair job and links it directly to the user's Student ID. 
+## ระบบมีอะไรบ้าง
 
-### 4. Status Tracking
-The user can check the status of their computer at any time by simply entering their Student ID into the tracking page.
+- สมัครและเข้าสู่ระบบด้วยรหัสนักศึกษา รหัสผ่านเก็บเป็น hash และผู้สมัครใหม่ไม่สามารถเลือก role Admin เองได้
+- ส่งคำขอพร้อมอาคาร ชั้น/ห้อง เบอร์ติดต่อ รายละเอียดอาการ และภาพ JPG/PNG/WEBP ขนาดไม่เกิน 5 MB
+- แสดงตัวอย่างภาพและชื่อไฟล์ทันทีหลังเลือกภาพ พร้อมลบภาพที่เลือกก่อนส่งคำขอได้
+- หน้าตา responsive ใช้ธีมสีส้ม-ขาว
+- Ticket รูปแบบ `RIETC-XXXXX` สุ่มจากตัวอักษร/ตัวเลข ตรวจสอบก่อนใช้ และมี unique constraint กันซ้ำใน MySQL
+- ดูประวัติและสถานะของคำขอในบัญชี หรือค้นหาด้วย Ticket ที่หน้า “ติดตามงาน”
+- หน้าโปรไฟล์เก็บข้อมูลบัญชีและประวัติ Ticket พร้อมสถานะ ปุ่มเปิดความคืบหน้า คัดลอกรหัส และค้นหา Ticket ในประวัติ
+- Admin ค้นหาด้วย Ticket/รหัสนักศึกษา และปรับสถานะพร้อมหมายเหตุได้
+- ใช้ prepared statements, CSRF token, ตรวจ MIME ของไฟล์ และตั้งชื่อภาพแบบสุ่ม
 
-### 5. Completion and Return
-When the repair process is finished, the status will be updated to "Completed." The user can then select whether they want to pick up the device in person or have the staff deliver it to their location.
-
-## Technologies Used
-* **Frontend:** [HTML/TailwindCSS]
-* **Backend:** [Node.js]
-* **Database:** [MySql]
-
-## Installation and Setup
-
-### Prerequisites
-* [XAMPP]
-
-## Developer
-* **Name:** [Suvijak Purdjiradtikan]
-* **Department:** [Information Technology]
+สถานะงาน: `รอดำเนินการ`, `กำลังดำเนินการ`, `เสร็จสิ้น`, `ยกเลิก` สำหรับใช้งานบนเซิร์ฟเวอร์จริงให้เปิด HTTPS และตั้ง `upload_max_filesize` / `post_max_size` ของ PHP ให้ไม่น้อยกว่า 5 MB
